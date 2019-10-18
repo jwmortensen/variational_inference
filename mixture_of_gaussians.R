@@ -1,6 +1,29 @@
 library(shiny)
 library(tidyverse)
 
+# This is an implementation of the CAVI algorithm for the
+# univariate mixture of gaussians outlined in
+# "Variational Inference: A Review for Statisticians" by Blei et. al. 2016
+
+simulate_data = function(K = 3, sigma2 = 5, n = 100) {
+  mu = rnorm(K, sd = sqrt(sigma2))
+  c_i = factor(sample.int(n = K, size = n, replace = TRUE))
+  C = Matrix::sparse.model.matrix(~ -1 + c_i)
+  x = rnorm(n, mean = as.vector(C %*% mu), sd = 1)
+
+  res = list(
+    K = K,
+    sigma2 = sigma2,
+    n = n,
+    mu = mu,
+    c_i = c_i,
+    C = C,
+    x = x
+  )
+
+  return(res)
+}
+
 make_elbo = function(x, sigma2, K) {
 
   n = length(x)
@@ -24,25 +47,6 @@ make_elbo = function(x, sigma2, K) {
   }
 
   return(elbo)
-}
-
-simulate_data = function(K = 3, sigma2 = 5, n = 100) {
-  mu = rnorm(K, sd = sqrt(sigma2))
-  c_i = factor(sample.int(n = K, size = n, replace = TRUE))
-  C = Matrix::sparse.model.matrix(~ -1 + c_i)
-  x = rnorm(n, mean = as.vector(C %*% mu), sd = 1)
-
-  res = list(
-    K = K,
-    sigma2 = sigma2,
-    n = n,
-    mu = mu,
-    c_i = c_i,
-    C = C,
-    x = x
-  )
-
-  return(res)
 }
 
 make_update_params = function(x, sigma2, K) {
